@@ -1,7 +1,6 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import User from '#models/user'
 import hash from '@adonisjs/core/services/hash'
-import { hasOnlyExpressionInitializer } from 'typescript'
 
 export default class UsersController {
 
@@ -32,6 +31,7 @@ export default class UsersController {
     return response.ok(user)
   }
 
+  // Atualizando os dados do usuário
   async update({ params, request, response }: HttpContext) {
     const user = await User.find(params.id)
 
@@ -49,5 +49,17 @@ export default class UsersController {
     await user.save()
 
     return response.ok(user)
+  }
+
+  // Deletando um usuário
+  async destroy({ params, response }: HttpContext) {
+    const user = await User.find(params.id)
+
+    if (!user) {
+      return response.notFound({ message: 'User not found.' })
+    }
+
+    await user.delete()
+    return response.noContent()
   }
 }
