@@ -42,45 +42,66 @@ export default class UsersController {
   }
 
   // Exibe um usuário
-  async show({ params, response }: HttpContext) {
-    const user = await User.find(params.id)
+  public async show({ params, response }: HttpContext) {
+    try {
+      const user = await User.find(params.id)
 
-    if (!user) {
-      return response.notFound({ message: 'User not found.' })
+      if (!user) {
+        return response.notFound({ message: 'User not found.' })
+      }
+
+      return response.ok(user)
+    } catch (error) {
+      return response.badRequest({
+        message: 'Unable to fetch user data.',
+        details: error.message || 'Unknown error.',
+      })
     }
-
-    return response.ok(user)
   }
 
   // Atualizando os dados do usuário
-  async update({ params, request, response }: HttpContext) {
-    const user = await User.find(params.id)
+  public async update({ params, request, response }: HttpContext) {
+    try {
+      const user = await User.find(params.id)
 
-    if (!user) {
-      return response.notFound({ message: 'User not found.' })
+      if (!user) {
+        return response.notFound({ message: 'User not found.' })
+      }
+
+      const data = request.only(['name', 'email', 'password', 'salary'])
+
+      if (data.password) {
+        data.password = await hash.make(data.password)
+      }
+
+      user.merge(data)
+      await user.save()
+
+      return response.ok(user)
+    } catch (error) {
+      return response.badRequest({
+        message: 'Unable to update user data.',
+        details: error.message || 'Unknown error.',
+      })
     }
-
-    const data = request.only(['name', 'email', 'password', 'salary'])
-
-    if (data.password) {
-      data.password = await hash.make(data.password)
-    }
-
-    user.merge(data)
-    await user.save()
-
-    return response.ok(user)
   }
 
   // Deletando um usuário
-  async destroy({ params, response }: HttpContext) {
-    const user = await User.find(params.id)
+  public async destroy({ params, response }: HttpContext) {
+    try {
+      const user = await User.find(params.id)
 
-    if (!user) {
-      return response.notFound({ message: 'User not found.' })
+      if (!user) {
+        return response.notFound({ message: 'User not found.' })
+      }
+
+      await user.delete()
+      return response.noContent()
+    } catch (error) {
+      return response.badRequest({
+        message: 'Unable to delete user.',
+        details: error.message || 'Unknown error',
+      })
     }
-
-    await user.delete()
-    return response.noContent()
   }
 }
